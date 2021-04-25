@@ -181,7 +181,7 @@ static void jctl_graph_print (ofp_state *S, jctl_graph *g)
 
 	/* global line count */
 	_jctl_printf("%.*s", g->hfnlen + g->hdirlen + incslsh, space);
-	_jctl_printf("   %u line%s", g->glc, (g->glc == 1) ? "" : "s");
+	_jctl_printf("   %u line%s\n", g->glc, (g->glc == 1) ? "" : "s");
 }
 
 
