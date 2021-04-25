@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 
-static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, ofp_uint fnlen, ofp_uint dirlen);
+static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_uint fnlen, jctl_uint dirlen, jctl_uint wildcard);
 
 /*
  * Return the length of unsigned integer 'n'.
@@ -157,7 +157,8 @@ static void jctl_graph_print (ofp_state *S, jctl_graph *g)
 		 * malloc'ed while interpreting
 		 * the wildcard in function 'jctl_graph_entry_wildcard'.
 		 */
-		free(e->fn);
+		if(e->wc)
+			free(e->fn);
 
 		/* "post-filename" padding */
 		_jctl_printf("%.*s", g->hfnlen - e->fnlen, space);
@@ -281,7 +282,7 @@ static void jctl_graph_entry_wildcard (ofp_state *S, jctl_graph *g, char *fn, jc
 				/* no path, just filename */
 				char *file_name = malloc(sizeof(*file_name) * file_len + 1);
 				memcpy(file_name, file.name, file_len + 1);
-				jctl_graph_entry_new(S, g, file_name, file_len, 0);
+				jctl_graph_entry_new(S, g, file_name, file_len, 0, 1);
 			}
 			else
 			{
@@ -291,7 +292,7 @@ static void jctl_graph_entry_wildcard (ofp_state *S, jctl_graph *g, char *fn, jc
 				memcpy(file_name, dir_path, dir_len);
 				memcpy(file_name + dir_len + 1, file.name, file_len + 1);
 				file_name[dir_len] = '/';
-				jctl_graph_entry_new(S, g, file_name, file_len, dir_len);
+				jctl_graph_entry_new(S, g, file_name, file_len, dir_len, 1);
 			}
 		}
 
@@ -306,7 +307,7 @@ static void jctl_graph_entry_wildcard (ofp_state *S, jctl_graph *g, char *fn, jc
  * Register a new graph entry.
  * Wildcards get processed and "highest" values updated.
  */
-static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_uint fnlen, jctl_uint dirlen)
+static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_uint fnlen, jctl_uint dirlen, jctl_uint wildcard)
 {
 	if(g->entrytop >= JCTL_GRAPH_MAX_ENTRIES)
 	{
@@ -340,6 +341,7 @@ static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_ui
 
 	jctl_graph_entry *e = g->entries + g->entrytop++;
 	e->fn = fn;
+	e->wc = wildcard;
 
 	/* fnlen */
 	e->fnlen = fnlen;
@@ -393,7 +395,7 @@ jctl_uint jctl_graph_run (ofp_state *S, jctl_graph_sortorder so)
 		char *fn = S->nal[i];
 		if(fn == NULL)
 			continue;
-		jctl_graph_entry_new(S, g, fn, _jctl_strlen(fn), 0);
+		jctl_graph_entry_new(S, g, fn, _jctl_strlen(fn), 0, 0);
 	}
 
 	jctl_graph_sort(S, g, so);
