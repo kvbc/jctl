@@ -40,6 +40,7 @@ typedef enum jctl_graph_sortorder_e
 typedef struct jctl_graph_entry_s
 {
 	char *fn;			/* filename */
+	jctl_uint wc;		/* uses wildcard */
 	jctl_uint lc;		/* line count */
 	jctl_uint fnlen;	/* filename length */
 	jctl_uint dirlen;	/* directory length */
