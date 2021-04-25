@@ -45,7 +45,14 @@
 	/** @brief
 	 * API's visibility and/or linkage
 	 */
-	#define OFP_API __declspec(dllexport)
+	#if defined(_MSC_VER)
+	    #define OFP_API __declspec(dllexport)
+	#elif defined(__GNUC__)
+	    #define OFP_API __attribute__((visibility("default")))
+	#else
+	    #define OFP_API
+	    #pragma warning Unknown dynamic link import/export semantics.
+	#endif
 #endif /* OFP_API */
 
 
