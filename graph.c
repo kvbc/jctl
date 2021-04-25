@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 
-static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_uint fnlen, jctl_uint dirlen, jctl_uint wildcard);
+static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_uint fnlen, jctl_uint dirlen, jctl_uint wc);
 
 /*
  * Return the length of unsigned integer 'n'.
@@ -203,6 +203,7 @@ static int jctl_graph_entry_exists (ofp_state *S, jctl_graph *g, char *fn, jctl_
 }
 
 
+#if (defined _MSC_VER || defined __MINGW32__)
 /*
  * Look for files matching wildcard syntax in the
  * specified directory and register them as new graph entries.
@@ -301,19 +302,29 @@ static void jctl_graph_entry_wildcard (ofp_state *S, jctl_graph *g, char *fn, jc
 
 	tinydir_close(&dir);
 }
+#endif
 
 
 /*
  * Register a new graph entry.
  * Wildcards get processed and "highest" values updated.
  */
-static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_uint fnlen, jctl_uint dirlen, jctl_uint wildcard)
+static void jctl_graph_entry_new
+(
+	ofp_state *S,
+	jctl_graph *g,
+	char *fn,
+	jctl_uint fnlen,
+	jctl_uint dirlen,
+	jctl_uint wc
+)
 {
 	if(g->entrytop >= JCTL_GRAPH_MAX_ENTRIES)
 	{
 		jctl_graph_throw(g);
 	}
 
+#if (defined _MSC_VER || defined __MINGW32__)
 	if(wc_correct(fn))
 	{
 		/*
@@ -325,6 +336,19 @@ static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_ui
 		return;
 	}
 	else if(dirlen == 0)
+#else
+	tinydir_dir dir;
+	if(tinydir_open(&dir, fn) == 0)
+	{
+		tinydir_close(&dir);
+		return;
+	}
+
+	if(jctl_graph_entry_exists(S, g, fn, fnlen))
+	{
+		return;
+	}
+#endif
 	{
 		/*
 		 * If non-wildcard argument 
@@ -341,7 +365,7 @@ static void jctl_graph_entry_new (ofp_state *S, jctl_graph *g, char *fn, jctl_ui
 
 	jctl_graph_entry *e = g->entries + g->entrytop++;
 	e->fn = fn;
-	e->wc = wildcard;
+	e->wc = wc;
 
 	/* fnlen */
 	e->fnlen = fnlen;
