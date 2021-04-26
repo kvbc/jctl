@@ -104,15 +104,21 @@ static void jctl_graph_sort (ofp_state *S, jctl_graph *g, jctl_graph_sortorder s
  */
 static void jctl_graph_print (ofp_state *S, jctl_graph *g)
 {
+	jctl_uint max_padding;
+	if(g->hfnlen > g->hdirlen)
+		max_padding = g->hfnlen;
+	else
+		max_padding = g->hdirlen;
+
 	/*
 	 * Initialize the buffers
 	 * for padding printing.
 	 */
-	char space[JCTL_GRAPH_BARS + 1];
+	char space[max_padding + 1];
 	char equals[JCTL_GRAPH_BARS + 1];
-	memset(space, ' ', JCTL_GRAPH_BARS);
+	memset(space, ' ', max_padding);
 	memset(equals, '=', JCTL_GRAPH_BARS);
-	space[JCTL_GRAPH_BARS] = '\0';
+	space[max_padding] = '\0';
 	equals[JCTL_GRAPH_BARS] = '\0';
 
 	/*
