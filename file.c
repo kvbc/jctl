@@ -40,6 +40,22 @@ jctl_uint jctl_file_linecount (char *fn)
 
 
 /*
+ * Check if file "fn" exists.
+ * Return 1 if it does,
+ * otherwise return 0.
+ */
+jctl_uint jctl_file_exists (char *fn)
+{
+	if(fn == NULL)
+		return 0;
+
+	FILE *fp = fopen(fn, "r");
+	
+	return (fp != NULL);
+}
+
+
+/*
  * Returns the file count in directory 'path'.
  */
 jctl_uint jctl_dir_filecount (char *path)
