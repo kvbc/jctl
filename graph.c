@@ -111,8 +111,8 @@ static void jctl_graph_print (ofp_state *S, jctl_graph *g)
 		max_padding = g->hdirlen;
 
 	/*
-	 * Initialize the buffers
-	 * for padding printing.
+	 * Initialize the padding
+	 * buffers for printing.
 	 */
 	char space[max_padding + 1];
 	char equals[JCTL_GRAPH_BARS + 1];
@@ -317,12 +317,12 @@ static void jctl_graph_entry_wildcard (ofp_state *S, jctl_graph *g, char *fn, jc
  */
 static void jctl_graph_entry_new
 (
-	ofp_state *S,
-	jctl_graph *g,
-	char *fn,
-	jctl_uint fnlen,
-	jctl_uint dirlen,
-	jctl_uint wc
+	ofp_state *S,		/* OFP state */
+	jctl_graph *g,		/* JCTL graph */
+	char *fp,			/* filepath */
+	jctl_uint fplen,	/* filepath's length */
+	jctl_uint dirlen,	/* directory's lenght */
+	jctl_uint wc		/* wildcard flag */
 )
 {
 	if(g->entrytop >= JCTL_GRAPH_MAX_ENTRIES)
@@ -331,52 +331,74 @@ static void jctl_graph_entry_new
 	}
 
 #if (defined _MSC_VER || defined __MINGW32__)
-	if(wc_correct(fn))
+	/*
+	 * Command line doesn't handle Wildcards.
+	 * Check for wildcard syntax.
+	 */
+	if(wc_correct(fp))
 	{
 		/*
-		 * 'fn' matches wildcard syntax,
+		 * 'fp' matches wildcard syntax,
 		 * evaluate the entry as wildcard
 		 * using the 'jctl_graph_entry_wildcard' function.
 		 */
-		jctl_graph_entry_wildcard(S, g, fn, fnlen, dirlen);
+		jctl_graph_entry_wildcard(S, g, fp, fplen, dirlen);
 		return;
 	}
 	else if(dirlen == 0)
 #else
-	tinydir_dir dir;
-	if(tinydir_open(&dir, fn) == 0)
-	{
-		tinydir_close(&dir);
-		return;
-	}
-
-	if(jctl_graph_entry_exists(S, g, fn, fnlen))
+	/*
+	 * Wildcard is supported by the command line.
+	 * Every UIA is an filepath.
+	 * Validate that an entry hasn't
+	 * already been registered.
+	 */
+	if(jctl_graph_entry_exists(S, g, fp, fplen))
 	{
 		return;
 	}
 #endif
 	{
 		/*
+		 * Validate that the given filepath
+		 * is not an directory.
+		 */
+		tinydir_dir dir;
+		if(tinydir_open(&dir, fp) == 0)
+		{
+			tinydir_close(&dir);
+			return;
+		}
+
+		/*
+		 * Validate that the given file exists.
+		 */
+		if(!jctl_file_exists(fp))
+		{
+			return;
+		}
+
+		/*
 		 * If non-wildcard argument 
 		 * is a path, not a filename,
 		 * figure out the directory and filename length.
 		 */
-		char *lslsh = strrchr(fn, '/');
+		char *lslsh = strrchr(fp, '/');
 		if(lslsh != NULL)
 		{
-			dirlen = lslsh - fn;
-			fnlen -= dirlen + 1;
+			dirlen = lslsh - fp;
+			fplen -= dirlen + 1;
 		}
 	}
 
 	jctl_graph_entry *e = g->entries + g->entrytop++;
-	e->fn = fn;
+	e->fn = fp;
 	e->wc = wc;
 
 	/* fnlen */
-	e->fnlen = fnlen;
-	if(fnlen > g->hfnlen)
-		g->hfnlen = fnlen;
+	e->fnlen = fplen;
+	if(fplen > g->hfnlen)
+		g->hfnlen = fplen;
 
 	/* lc */
 	jctl_uint lc = jctl_file_linecount(e->fn);
