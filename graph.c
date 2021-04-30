@@ -209,7 +209,7 @@ static int jctl_graph_entry_exists (ofp_state *S, jctl_graph *g, char *fn, jctl_
 }
 
 
-#if (defined _MSC_VER || defined __MINGW32__)
+#ifdef _WIN32
 /*
  * Look for files matching wildcard syntax in the
  * specified directory and register them as new graph entries.
@@ -308,7 +308,7 @@ static void jctl_graph_entry_wildcard (ofp_state *S, jctl_graph *g, char *fn, jc
 
 	tinydir_close(&dir);
 }
-#endif
+#endif /* defined(_WIN32) */
 
 
 /*
@@ -330,7 +330,7 @@ static void jctl_graph_entry_new
 		jctl_graph_throw(g);
 	}
 
-#if (defined _MSC_VER || defined __MINGW32__)
+#ifdef _WIN32
 	/*
 	 * Command line doesn't handle Wildcards.
 	 * Check for wildcard syntax.
@@ -357,7 +357,7 @@ static void jctl_graph_entry_new
 	{
 		return;
 	}
-#endif
+#endif /* defined(_WIN32) */
 	{
 		/*
 		 * Validate that the given filepath
